@@ -1,0 +1,30 @@
+# Django Framework
+Django==5.2
+
+# Django REST Framework
+djangorestframework==3.14.0
+
+# JWT Authentication
+djangorestframework-simplejwt==5.5.0
+PyJWT==2.9.0
+
+# CORS Headers for frontend integration
+django-cors-headers==4.7.0
+
+# Image processing for menu item images
+Pillow==11.3.0
+
+# Timezone support
+pytz==2025.2
+
+# SQL parsing
+sqlparse==0.5.3
+
+# ASGI support
+asgiref==3.8.1
+
+# Windows timezone data
+tzdata==2025.2
+
+# HTTP requests library (for testing)
+requests==2.31.0
