@@ -126,29 +126,6 @@ restaurant_backend/
 - Review description
 - Creation and update timestamps
 
-## API Endpoints
-
-### Authentication (`/api/auth/`)
-- `POST /api/auth/register/` - User registration
-- `POST /api/auth/login/` - User login
-- `GET /api/auth/profile/` - User profile (protected)
-
-### Restaurant Operations (`/api/`)
-- `GET /api/menu/` - View menu items (public)
-- `POST /api/reservation/` - Create reservation (protected)
-- `GET /api/reservations/` - User reservations (protected)
-- `POST /api/order/` - Place order (protected)
-- `GET /api/orders/` - User order history (protected)
-- `POST /api/review/` - Submit review (protected)
-- `GET /api/reviews/` - View reviews (public, paginated)
-
-### Admin Operations (`/api/admin/`)
-- `GET /api/admin/users/` - List all users (admin only)
-- `POST /api/admin/menu/` - Add menu item (admin only)
-- `GET /api/admin/menu/all/` - List all menu items (admin only)
-- `DELETE /api/admin/menu/<id>/` - Delete menu item (admin only)
-- `GET /api/admin/reviews/` - List all reviews (admin only)
-- `DELETE /api/admin/review/<id>/` - Delete review (admin only)
 
 ## Installation & Setup
 
@@ -173,17 +150,11 @@ restaurant_backend/
    python manage.py createsuperuser
    ```
 
-5. **Populate sample data**
-   ```bash
-   python manage.py populate_sample_data
-   ```
-
-6. **Start development server**
+5. **Start development server**
    ```bash
    python manage.py runserver
    ```
 
-The API will be available at `http://127.0.0.1:8000/api/`
 
 ## Authentication
 
@@ -194,27 +165,6 @@ Authorization: Bearer <access_token>
 ```
 
 Tokens expire in 60 minutes and can be refreshed using the refresh token.
-
-## Sample Data
-
-The project includes a management command to populate sample menu items:
-- Margherita Pizza ($12.99)
-- Caesar Salad ($8.99)
-- Grilled Salmon ($18.99)
-- Chicken Alfredo ($15.99)
-- Chocolate Cake ($6.99)
-- Beef Burger ($11.99)
-- Vegetable Stir Fry ($10.99)
-- Fish Tacos ($13.99)
-
-## Testing
-
-Run the included test script to verify API functionality:
-```bash
-python test_api.py
-```
-
-This tests user registration, login, menu access, and protected endpoints.
 
 ## Admin Interface
 
