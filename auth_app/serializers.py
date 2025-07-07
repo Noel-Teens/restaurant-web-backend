@@ -10,10 +10,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     """
     password = serializers.CharField(write_only=True, validators=[validate_password])
     password_confirm = serializers.CharField(write_only=True)
-    
+
     class Meta:
         model = User
-        fields = ('username', 'email', 'password', 'password_confirm')
+        fields = ('username', 'email', 'password', 'password_confirm', 'first_name', 'last_name')
         
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
@@ -25,7 +25,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
-            password=validated_data['password']
+            password=validated_data['password'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', '')
         )
         return user
 
@@ -58,7 +60,9 @@ class UserSerializer(serializers.ModelSerializer):
     """
     Serializer for user profile information
     """
+    full_name = serializers.ReadOnlyField()
+
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'date_created', 'first_name', 'last_name', 'is_staff', 'is_superuser')
-        read_only_fields = ('id', 'date_created', 'is_staff', 'is_superuser')
+        fields = ('id', 'username', 'email', 'date_created', 'first_name', 'last_name', 'full_name', 'is_staff', 'is_superuser')
+        read_only_fields = ('id', 'date_created', 'full_name', 'is_staff', 'is_superuser')

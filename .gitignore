@@ -216,3 +216,6 @@ REVIEW_SYSTEM_FEATURES.md
 test_complete_system.py
 verify_api_completeness.py
 HUGGINGFACE_DEPLOYMENT_GUIDE.md
+ADMIN_ENDPOINTS_GUIDE.md
+test_name_fields.py
+media/

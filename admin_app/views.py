@@ -131,16 +131,13 @@ def admin_menu_items(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['DELETE'])
+
+@api_view(['GET', 'DELETE'])
 @permission_classes([IsAuthenticated])
-def admin_delete_user(request, user_id):
+def admin_user_details_or_delete(request, user_id):
     """
-    Delete a user and all associated data (admin only)
-    This will cascade delete:
-    - All user's orders (OrderHistory)
-    - All user's order items (OrderItem)
-    - All user's table reservations (TableReservation)
-    - All user's reviews (Review)
+    GET: Get detailed information about a user including their associated data (admin only)
+    DELETE: Delete a user and all associated data (admin only)
     """
     if not is_admin_user(request.user):
         return Response(
@@ -148,97 +145,84 @@ def admin_delete_user(request, user_id):
             status=status.HTTP_403_FORBIDDEN
         )
 
-    # Prevent admin from deleting themselves
-    if request.user.id == user_id:
-        return Response(
-            {'error': 'Cannot delete your own account'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
     user = get_object_or_404(User, id=user_id)
 
-    # Get counts of related data before deletion for response
-    orders_count = user.orders.count()
-    reservations_count = user.reservations.count()
-    reviews_count = user.reviews.count()
+    if request.method == 'GET':
+        # Get counts of related data
+        orders_count = user.orders.count()
+        reservations_count = user.reservations.count()
+        reviews_count = user.reviews.count()
 
-    # Use transaction to ensure atomicity
-    try:
-        with transaction.atomic():
-            username = user.username
-            email = user.email
-            user.delete()  # This will cascade delete all related data
+        # Calculate total spent
+        total_spent = sum(order.total_amount for order in user.orders.all())
+
+        # Get pending and confirmed reservations count
+        pending_reservations = user.reservations.filter(status='pending').count()
+        confirmed_reservations = user.reservations.filter(status='confirmed').count()
+
+        # Get recent orders (last 5)
+        recent_orders = user.orders.all()[:5]
+        recent_orders_data = []
+        for order in recent_orders:
+            recent_orders_data.append({
+                'id': order.id,
+                'order_date': order.order_date,
+                'total_amount': order.total_amount,
+                'status': order.status
+            })
+
+        # Get recent reservations (last 5)
+        recent_reservations = user.reservations.all()[:5]
+        recent_reservations_data = []
+        for reservation in recent_reservations:
+            recent_reservations_data.append({
+                'id': reservation.id,
+                'reservation_date': reservation.reservation_date,
+                'reservation_time': reservation.reservation_time,
+                'party_size': reservation.party_size,
+                'status': reservation.status
+            })
 
         return Response({
-            'message': f'User "{username}" ({email}) and all associated data deleted successfully',
+            'user': UserSerializer(user).data,
+            'statistics': {
+                'total_orders': orders_count,
+                'total_spent': float(total_spent),
+                'total_reviews': reviews_count,
+                'total_reservations': reservations_count,
+                'pending_reservations': pending_reservations,
+                'confirmed_reservations': confirmed_reservations
+            },
+            'recent_orders': recent_orders_data,
+            'recent_reservations': recent_reservations_data
+        }, status=status.HTTP_200_OK)
+
+    elif request.method == 'DELETE':
+        # Prevent admin from deleting their own account
+        if user.id == request.user.id:
+            return Response(
+                {'error': 'Cannot delete your own account'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Count data before deletion for reporting
+        orders_count = user.orders.count()
+        order_items_count = sum(order.order_items.count() for order in user.orders.all())
+        reservations_count = user.reservations.count()
+        reviews_count = user.reviews.count()
+
+        # Delete user (this will cascade delete all related data)
+        user.delete()
+
+        return Response({
+            'message': 'User and all associated data deleted successfully',
             'deleted_data': {
                 'orders': orders_count,
+                'order_items': order_items_count,
                 'reservations': reservations_count,
                 'reviews': reviews_count
             }
         }, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response(
-            {'error': f'Failed to delete user: {str(e)}'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def admin_user_details(request, user_id):
-    """
-    Get detailed information about a user including their associated data (admin only)
-    """
-    if not is_admin_user(request.user):
-        return Response(
-            {'error': 'Admin access required'},
-            status=status.HTTP_403_FORBIDDEN
-        )
-
-    user = get_object_or_404(User, id=user_id)
-
-    # Get counts of related data
-    orders_count = user.orders.count()
-    reservations_count = user.reservations.count()
-    reviews_count = user.reviews.count()
-
-    # Get recent orders (last 5)
-    recent_orders = user.orders.all()[:5]
-    recent_orders_data = []
-    for order in recent_orders:
-        recent_orders_data.append({
-            'id': order.id,
-            'order_date': order.order_date,
-            'total_amount': order.total_amount,
-            'status': order.status
-        })
-
-    # Get recent reservations (last 5)
-    recent_reservations = user.reservations.all()[:5]
-    recent_reservations_data = []
-    for reservation in recent_reservations:
-        recent_reservations_data.append({
-            'id': reservation.id,
-            'reservation_date': reservation.reservation_date,
-            'reservation_time': reservation.reservation_time,
-            'party_size': reservation.party_size,
-            'status': reservation.status
-        })
-
-    user_data = UserSerializer(user).data
-    user_data.update({
-        'statistics': {
-            'total_orders': orders_count,
-            'total_reservations': reservations_count,
-            'total_reviews': reviews_count
-        },
-        'recent_orders': recent_orders_data,
-        'recent_reservations': recent_reservations_data
-    })
-
-    return Response(user_data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
