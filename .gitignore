@@ -215,3 +215,4 @@ CART_AND_RESERVATION_FEATURES.md
 REVIEW_SYSTEM_FEATURES.md
 test_complete_system.py
 verify_api_completeness.py
+HUGGINGFACE_DEPLOYMENT_GUIDE.md

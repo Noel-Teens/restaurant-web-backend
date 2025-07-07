@@ -1,206 +1,221 @@
-# Restaurant Backend API
+---
+title: Restaurant Backend API
+emoji: 🍽️
+colorFrom: orange
+colorTo: red
+sdk: docker
+pinned: false
+license: mit
+app_port: 7860
+---
 
-A comprehensive Django REST API backend for a restaurant web application with JWT authentication, order management, table reservations, and review systems.
+# 🍽️ Restaurant Backend API
 
-## Overview
+A comprehensive Django REST API for restaurant management with user authentication, menu management, ordering system, reservations, and reviews.
 
-This Django-based backend provides a complete restaurant management system with three main applications:
-- **Authentication App**: User registration, login, and profile management
-- **Restaurant Server**: Menu items, orders, reservations, and reviews
-- **Admin App**: Administrative functions for managing users, menu items, and reviews
-
-## Features
+## 🚀 Features
 
 ### 🔐 Authentication System
-- Custom user model with email-based authentication
-- JWT (JSON Web Token) authentication
-- User registration and login endpoints
-- Secure password validation
-- User profile management
+- User registration and login
+- Admin authentication with enhanced permissions
+- JWT-based authentication
+- Role-based access control
 
 ### 🍽️ Menu Management
-- Menu item creation with image support
-- Food name, description, and pricing
+- Public menu browsing
+- Admin menu item management (CRUD operations)
+- Image upload support for menu items
 - Availability status tracking
-- Public menu viewing (no authentication required)
 
-### 📋 Order System
-- Complete order placement functionality
-- Multiple menu items per order with quantities
-- Automatic total calculation
-- Order status tracking (pending → confirmed → preparing → ready → delivered)
-- Special instructions support
-- Order history for users
+### 🛒 Ordering System
+- Direct cart checkout
+- Order history tracking
+- Automatic order status management
+- Price preservation at time of order
 
-### 🪑 Table Reservations
-- Date and time-based reservations
-- Party size specification (1-20 people)
-- Special requests handling
-- Reservation status management
-- Table number assignment by admin
+### 🪑 Reservation System
+- User reservation creation
+- Admin approval/rejection workflow
+- Table assignment and availability checking
+- Conflict prevention for double bookings
 
 ### ⭐ Review System
 - Order-based reviews (one review per order)
-- 5-star rating system
-- Detailed review descriptions
+- User can only review their own orders
 - Public review viewing with pagination
-- Review management by admins
+- Admin moderation capabilities
 
-### 👨‍💼 Admin Features
-- User management (view all registered users)
-- Menu item management (add/delete items)
-- Review moderation (view/delete reviews)
-- Staff and superuser privilege system
+### 👨‍💼 Admin Dashboard
+- User management (view, delete, bulk operations)
+- Menu management
+- Reservation management
+- Review moderation
 
-## Technology Stack
+## 📡 API Endpoints (26 Total)
 
-- **Framework**: Django 5.2
-- **API**: Django REST Framework
-- **Authentication**: Simple JWT
-- **Database**: SQLite (development)
-- **Image Handling**: Pillow
-- **CORS**: django-cors-headers
+### Public Endpoints (5)
+- `POST /api/auth/register/` - User registration
+- `POST /api/auth/login/` - User login
+- `POST /api/auth/admin-login/` - Admin login
+- `GET /api/menu/` - Browse menu items
+- `GET /api/reviews/` - View public reviews
 
-## Project Structure
+### Protected Endpoints (8)
+- `GET /api/auth/profile/` - User profile
+- `POST /api/reservation/` - Create reservation
+- `GET /api/reservations/` - User reservations
+- `POST /api/checkout/` - Cart checkout
+- `GET /api/orders/` - Order history
+- `POST /api/review/` - Create review
 
-```
-restaurant_backend/
-├── auth_app/                 # User authentication
-│   ├── models.py            # Custom User model
-│   ├── serializers.py       # User serializers
-│   ├── views.py             # Auth endpoints
-│   └── urls.py              # Auth URL patterns
-├── restaurant_server/        # Restaurant operations
-│   ├── models.py            # Menu, Order, Reservation, Review models
-│   ├── serializers.py       # Restaurant serializers
-│   ├── views.py             # Restaurant endpoints
-│   ├── urls.py              # Restaurant URL patterns
-│   └── management/          # Custom management commands
-├── admin_app/               # Admin functionality
-│   ├── views.py             # Admin endpoints
-│   └── urls.py              # Admin URL patterns
-├── restaurant_backend/       # Main project settings
-│   ├── settings.py          # Django configuration
-│   └── urls.py              # Main URL configuration
-└── manage.py                # Django management script
-```
+### Admin Endpoints (14)
+- `GET /api/admin/users/` - List all users
+- `GET /api/admin/users/{id}/` - User details
+- `DELETE /api/admin/users/{id}/` - Delete user
+- `POST /api/admin/users/bulk-delete/` - Bulk delete users
+- `POST /api/admin/menu/` - Add menu item
+- `GET /api/admin/menu/all/` - List all menu items
+- `DELETE /api/admin/menu/{id}/` - Delete menu item
+- `GET /api/admin/reviews/` - List all reviews
+- `DELETE /api/admin/review/{id}/` - Delete review
+- `GET /api/admin/reservations/` - All reservations
+- `GET /api/admin/reservations/pending/` - Pending reservations
+- `GET /api/admin/reservations/available-tables/` - Check table availability
+- `POST /api/admin/reservations/{id}/approve/` - Approve reservation
+- `POST /api/admin/reservations/{id}/reject/` - Reject reservation
 
-## Database Models
+## 🧪 Demo Credentials
 
-### User Model
-- Custom user with email as username field
-- Username, email, first name, last name
-- Creation date tracking
-- Staff and admin privileges
+### Admin Account
+- **Email**: `admin@restaurant.com`
+- **Password**: `admin123`
 
-### MenuItem Model
-- Food image (optional)
-- Food name and description
-- Price with validation
-- Availability status
-- Creation and update timestamps
+### Test User Account
+- **Email**: `test@example.com`
+- **Password**: `testpassword123`
 
-### OrderHistory Model
-- User relationship
-- Order date and total amount
-- Order status tracking
-- Special instructions
-- Related order items
+## 📖 Quick Start
 
-### OrderItem Model
-- Junction table for orders and menu items
-- Quantity and price at time of order
-- Preserves historical pricing
-
-### TableReservation Model
-- User relationship
-- Reservation date and time
-- Party size (1-20 people)
-- Table number assignment
-- Special requests and status
-
-### Review Model
-- One-to-one relationship with orders
-- User relationship
-- Star rating (1-5)
-- Review description
-- Creation and update timestamps
-
-
-## Installation & Setup
-
-1. **Clone the repository**
-   ```bash
-   cd restaurant_backend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pip install djangorestframework djangorestframework-simplejwt django-cors-headers Pillow
-   ```
-
-3. **Run migrations**
-   ```bash
-   python manage.py makemigrations
-   python manage.py migrate
-   ```
-
-4. **Create superuser**
-   ```bash
-   python manage.py createsuperuser
-   ```
-
-5. **Start development server**
-   ```bash
-   python manage.py runserver
-   ```
-
-
-## Authentication
-
-The API uses JWT authentication. After login or registration, include the access token in requests:
-
-```
-Authorization: Bearer <access_token>
+### 1. Browse Menu (Public)
+```bash
+curl https://your-space-url.hf.space/api/menu/
 ```
 
-Tokens expire in 60 minutes and can be refreshed using the refresh token.
+### 2. User Login
+```bash
+curl -X POST https://your-space-url.hf.space/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "testpassword123"
+  }'
+```
 
-## Admin Interface
+### 3. Cart Checkout (Authenticated)
+```bash
+curl -X POST https://your-space-url.hf.space/api/checkout/ \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {"menu_item_id": 1, "quantity": 2},
+      {"menu_item_id": 2, "quantity": 1}
+    ],
+    "special_instructions": "Extra spicy please"
+  }'
+```
 
-Access the Django admin interface at `http://127.0.0.1:8000/admin/` to manage:
-- Users and their details
-- Menu items with images
-- Orders and order items
-- Table reservations
-- Reviews and ratings
+### 4. Create Reservation (Authenticated)
+```bash
+curl -X POST https://your-space-url.hf.space/api/reservation/ \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reservation_date": "2025-07-20",
+    "reservation_time": "18:00:00",
+    "party_size": 4,
+    "special_requests": "Window seat preferred"
+  }'
+```
 
-## Security Features
+### 5. Admin Login
+```bash
+curl -X POST https://your-space-url.hf.space/api/auth/admin-login/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@restaurant.com",
+    "password": "admin123"
+  }'
+```
 
-- JWT-based authentication
-- Password validation
-- CORS configuration for frontend integration
-- Admin-only endpoints protection
-- Input validation and sanitization
-- Secure file upload handling
+## 🏗️ Architecture
 
-## API Response Format
+### Database Models
+- **User**: Custom user model with email authentication
+- **MenuItem**: Restaurant menu items with images and pricing
+- **OrderHistory**: Customer orders with status tracking
+- **OrderItem**: Individual items within orders
+- **TableReservation**: Restaurant table reservations
+- **Review**: Customer reviews linked to orders
 
-All endpoints return JSON responses with appropriate HTTP status codes:
-- `200` - Success
-- `201` - Created
-- `400` - Bad Request
-- `401` - Unauthorized
-- `403` - Forbidden
-- `404` - Not Found
+### Key Relationships
+- User → Orders (1:many)
+- User → Reservations (1:many)
+- User → Reviews (1:many)
+- Order → Review (1:1, optional)
+- Order → OrderItems (1:many)
+- MenuItem → OrderItems (1:many)
 
-Error responses include descriptive messages for debugging and user feedback.
+## 🔧 Technical Stack
 
-## Development Features
+- **Framework**: Django 5.2 + Django REST Framework
+- **Authentication**: JWT (djangorestframework-simplejwt)
+- **Database**: SQLite (auto-configured)
+- **Image Processing**: Pillow
+- **CORS**: django-cors-headers for frontend integration
 
-- Debug mode enabled for development
-- Media file serving for uploaded images
-- CORS headers for frontend integration
-- Comprehensive error handling
-- Pagination support for large datasets
-- Automatic timestamp tracking
+## 📱 Frontend Ready
+
+This backend provides:
+- ✅ Complete CORS support
+- ✅ Detailed error messages
+- ✅ Consistent JSON response formats
+- ✅ File upload support for menu images
+- ✅ Pagination for large datasets
+- ✅ JWT authentication
+- ✅ Role-based access control
+
+## 📋 Sample Data Included
+
+- 🍕 9 menu items (Pizza, Salad, Chicken, Pasta, etc.)
+- 👤 Admin and test user accounts
+- 🔧 Ready-to-use API endpoints
+
+## 🧪 Testing
+
+The deployment includes comprehensive test scripts that verify:
+- ✅ User authentication and registration
+- ✅ Menu browsing and management
+- ✅ Cart checkout functionality
+- ✅ Order history tracking
+- ✅ Review system (order-based)
+- ✅ Reservation management
+- ✅ Admin dashboard operations
+
+## 📚 Documentation
+
+Complete API documentation with request/response examples is available in the repository.
+
+## 🚀 Production Ready
+
+This API is containerized and ready for:
+- Hugging Face Spaces (current deployment)
+- Docker containers
+- Cloud platforms (AWS, GCP, Azure)
+- Traditional hosting services
+
+---
+
+**Built with Django REST Framework** 🐍 **Deployed on Hugging Face Spaces** 🤗
+
+*Perfect for restaurant web applications, food delivery apps, or learning Django REST API development!*
