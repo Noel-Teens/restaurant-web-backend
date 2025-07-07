@@ -210,3 +210,4 @@ __marimo__/
 ADMIN_LOGIN_GUIDE.md
 test_admin_login.py
 test_api.py
+ADMIN_API_GUIDE.md
