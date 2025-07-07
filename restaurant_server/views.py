@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from django.shortcuts import get_object_or_404
 from .models import MenuItem, OrderHistory, TableReservation, Review
 from .serializers import (
     MenuItemSerializer, OrderHistorySerializer,
@@ -111,3 +112,63 @@ def reviews_list(request):
     result_page = paginator.paginate_queryset(reviews, request)
     serializer = ReviewSerializer(result_page, many=True)
     return paginator.get_paginated_response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def checkout_cart(request):
+    """
+    Checkout cart items and create order with 'delivered' status
+    """
+    from .models import OrderItem
+
+    # Get items from request
+    items_data = request.data.get('items', [])
+    special_instructions = request.data.get('special_instructions', '')
+
+    if not items_data:
+        return Response({
+            'error': 'No items provided for checkout'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Calculate total amount
+    total_amount = 0
+    for item_data in items_data:
+        try:
+            menu_item = MenuItem.objects.get(id=item_data['menu_item_id'])
+            quantity = item_data['quantity']
+            total_amount += menu_item.food_price * quantity
+        except MenuItem.DoesNotExist:
+            return Response({
+                'error': f"Menu item with id {item_data['menu_item_id']} not found"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except KeyError:
+            return Response({
+                'error': 'Invalid item data format'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Create order with calculated total and delivered status
+    order = OrderHistory.objects.create(
+        user=request.user,
+        total_amount=total_amount,
+        status='delivered',
+        special_instructions=special_instructions
+    )
+
+    # Create order items
+    for item_data in items_data:
+        menu_item = MenuItem.objects.get(id=item_data['menu_item_id'])
+        OrderItem.objects.create(
+            order=order,
+            menu_item=menu_item,
+            quantity=item_data['quantity'],
+            price_at_time=menu_item.food_price
+        )
+
+    return Response({
+        'message': 'Order placed and delivered successfully',
+        'order': OrderHistorySerializer(order).data
+    }, status=status.HTTP_201_CREATED)
+
+
+

@@ -7,7 +7,7 @@ from django.db import transaction
 from auth_app.models import User
 from auth_app.serializers import UserSerializer
 from restaurant_server.models import MenuItem, Review, OrderHistory, TableReservation
-from restaurant_server.serializers import MenuItemSerializer, ReviewSerializer
+from restaurant_server.serializers import MenuItemSerializer, ReviewSerializer, TableReservationSerializer
 
 
 def is_admin_user(user):
@@ -325,3 +325,155 @@ def admin_bulk_delete_users(request):
             {'error': f'Failed to delete users: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_pending_reservations(request):
+    """
+    Get all pending reservations (admin only)
+    """
+    if not is_admin_user(request.user):
+        return Response(
+            {'error': 'Admin access required'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    reservations = TableReservation.objects.filter(status='pending').order_by('reservation_date', 'reservation_time')
+    serializer = TableReservationSerializer(reservations, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_all_reservations(request):
+    """
+    Get all reservations (admin only)
+    """
+    if not is_admin_user(request.user):
+        return Response(
+            {'error': 'Admin access required'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    reservations = TableReservation.objects.all().order_by('-created_at')
+    serializer = TableReservationSerializer(reservations, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_approve_reservation(request, reservation_id):
+    """
+    Approve a pending reservation (admin only)
+    """
+    if not is_admin_user(request.user):
+        return Response(
+            {'error': 'Admin access required'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        reservation = get_object_or_404(TableReservation, id=reservation_id)
+
+        # Get table number from request (optional)
+        table_number = request.data.get('table_number')
+
+        # Check if table is available at the requested time
+        if table_number:
+            existing_reservation = TableReservation.objects.filter(
+                reservation_date=reservation.reservation_date,
+                reservation_time=reservation.reservation_time,
+                table_number=table_number,
+                status__in=['confirmed', 'seated']
+            ).exclude(id=reservation_id).first()
+
+            if existing_reservation:
+                return Response({
+                    'error': f'Table {table_number} is already reserved for {reservation.reservation_date} at {reservation.reservation_time}'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update reservation status and assign table if provided
+        reservation.status = 'confirmed'
+        if table_number:
+            reservation.table_number = table_number
+        reservation.save()
+
+        return Response({
+            'message': 'Reservation approved successfully',
+            'reservation': TableReservationSerializer(reservation).data
+        }, status=status.HTTP_200_OK)
+
+    except TableReservation.DoesNotExist:
+        return Response({
+            'error': 'Reservation not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_available_tables(request):
+    """
+    Get available tables for a specific date and time (admin only)
+    """
+    if not is_admin_user(request.user):
+        return Response(
+            {'error': 'Admin access required'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    date = request.query_params.get('date')
+    time = request.query_params.get('time')
+
+    if not date or not time:
+        return Response({
+            'error': 'Date and time parameters are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Get all reserved tables for the specified date and time
+    reserved_tables = TableReservation.objects.filter(
+        reservation_date=date,
+        reservation_time=time,
+        status__in=['confirmed', 'seated']
+    ).values_list('table_number', flat=True)
+
+    # Assume we have tables 1-20 (you can adjust this based on your restaurant)
+    all_tables = list(range(1, 21))
+    available_tables = [table for table in all_tables if table not in reserved_tables]
+
+    return Response({
+        'date': date,
+        'time': time,
+        'available_tables': available_tables,
+        'reserved_tables': list(reserved_tables)
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_reject_reservation(request, reservation_id):
+    """
+    Reject a pending reservation (admin only)
+    """
+    if not is_admin_user(request.user):
+        return Response(
+            {'error': 'Admin access required'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        reservation = get_object_or_404(TableReservation, id=reservation_id)
+
+        # Update reservation status to cancelled
+        reservation.status = 'cancelled'
+        reservation.save()
+
+        return Response({
+            'message': 'Reservation rejected successfully',
+            'reservation': TableReservationSerializer(reservation).data
+        }, status=status.HTTP_200_OK)
+
+    except TableReservation.DoesNotExist:
+        return Response({
+            'error': 'Reservation not found'
+        }, status=status.HTTP_404_NOT_FOUND)
