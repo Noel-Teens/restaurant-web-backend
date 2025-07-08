@@ -218,4 +218,5 @@ verify_api_completeness.py
 HUGGINGFACE_DEPLOYMENT_GUIDE.md
 ADMIN_ENDPOINTS_GUIDE.md
 test_name_fields.py
+test_update_profile.py
 media/

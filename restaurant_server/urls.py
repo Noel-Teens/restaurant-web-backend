@@ -13,4 +13,6 @@ urlpatterns = [
     path('reviews/', views.reviews_list, name='reviews_list'),
     # Cart and checkout
     path('checkout/', views.checkout_cart, name='checkout_cart'),
+    # Profile management
+    path('profile/update/', views.update_user_profile, name='update_user_profile'),
 ]

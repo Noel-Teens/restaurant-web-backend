@@ -171,4 +171,39 @@ def checkout_cart(request):
     }, status=status.HTTP_201_CREATED)
 
 
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def update_user_profile(request):
+    """
+    Update user's profile information (first_name, last_name)
+    """
+    user = request.user
+
+    # Get the data from request
+    first_name = request.data.get('first_name')
+    last_name = request.data.get('last_name')
+
+    # Validate that at least one field is provided
+    if first_name is None and last_name is None:
+        return Response({
+            'error': 'At least one field (first_name or last_name) must be provided'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Update fields if provided
+    if first_name is not None:
+        user.first_name = first_name
+
+    if last_name is not None:
+        user.last_name = last_name
+
+    # Save the user
+    user.save()
+
+    # Import UserSerializer here to avoid circular imports
+    from auth_app.serializers import UserSerializer
+
+    return Response({
+        'message': 'Profile updated successfully',
+        'user': UserSerializer(user).data
+    }, status=status.HTTP_200_OK)
 
