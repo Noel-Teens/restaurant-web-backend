@@ -1,14 +1,3 @@
----
-title: Restaurant Backend API
-emoji: 🍽️
-colorFrom: orange
-colorTo: red
-sdk: docker
-pinned: false
-license: mit
-app_port: 7860
----
-
 # 🍽️ Restaurant Backend API
 
 A comprehensive Django REST API for restaurant management with user authentication, menu management, ordering system, reservations, and reviews.
